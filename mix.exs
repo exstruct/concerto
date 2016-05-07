@@ -3,6 +3,7 @@ defmodule Concerto.Mixfile do
 
   def project do
     [app: :concerto,
+     description: "file-based routing library for elixir",
      version: "0.1.0",
      elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
