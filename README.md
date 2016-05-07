@@ -34,7 +34,7 @@ a router can be contstructed with the following:
 defmodule MyRouter do
   use Concerto, root: "web",
                 ext: ".exs",
-                method: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+                methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
                 module_prefix: MyApp.Web
 end
 ```
