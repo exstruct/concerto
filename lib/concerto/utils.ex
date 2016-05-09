@@ -1,14 +1,16 @@
 defmodule Concerto.Utils do
   @moduledoc false
 
-  def format_locations(files, root, ext, allowed_methods) do
+  def format_locations(files, root, ext, allowed_methods, filters) do
     files
-    |> Enum.filter(&!Regex.match?(~r/__[^_]+__\//, &1))
+    |> Enum.filter(fn(file) ->
+      !Enum.any?(filters, &Regex.match?(&1, file))
+    end)
     |> Enum.map(fn(file) ->
       path = path_to_list(file, root)
 
       method = Path.basename(file, ext)
-      mapped_method = allowed_methods && allowed_methods[method] || method
+      mapped_method = if allowed_methods, do: allowed_methods[method], else: method
 
       if !mapped_method do
         raise Concerto.InvalidMethodException, method: method, allowed: Map.keys(allowed_methods)

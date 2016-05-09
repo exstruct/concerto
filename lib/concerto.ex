@@ -18,8 +18,9 @@ defmodule Concerto do
       |> Enum.into(%{})
 
       prefix = opts[:module_prefix] || __MODULE__
+      filters = opts[:filters] || [~r/__[^_]+__/, ~r/_test.exs$/, ~r/\/test_helper.exs$/]
 
-      locations = Concerto.Utils.format_locations(resources, root, ext, methods)
+      locations = Concerto.Utils.format_locations(resources, root, ext, methods, filters)
 
       @doc """
       Lookup the module for the provided method and parts
