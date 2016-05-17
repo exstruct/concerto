@@ -16,6 +16,7 @@ defmodule Concerto do
           {key, key}
       end)
       |> Enum.into(%{})
+      default_method = opts[:default_method] || "GET"
 
       prefix = opts[:module_prefix] || __MODULE__
       filters = opts[:filters] || [~r/__[^_]+__/, ~r/_test.exs$/, ~r/\/test_helper.exs$/]
@@ -58,10 +59,11 @@ defmodule Concerto do
 
       def resolve_module(name)
 
-      for {file, method, mapped_method, path} <- locations do
-        name = method <> " /" <> Enum.join(path, "/")
-        module = Concerto.Utils.format_module(prefix, path, method)
-        {parts, params} = Concerto.Utils.format_parts(path)
+      for {file, method, mapped_method, path_info} <- locations do
+        path = "/" <> Enum.join(path_info, "/")
+        name = method <> " " <> path
+        module = Concerto.Utils.format_module(prefix, path_info, method)
+        {parts, params} = Concerto.Utils.format_parts(path_info)
 
         def match(unquote(method), unquote(parts)) do
           {unquote(module), %{unquote_splicing(params)}}
@@ -82,6 +84,16 @@ defmodule Concerto do
         end
         def resolve_module(unquote(name)) do
           unquote(module)
+        end
+
+        if default_method && method == default_method do
+          def resolve(unquote(path), %{unquote_splicing(params)}) do
+            {unquote(mapped_method), unquote(parts)}
+          end
+
+          def resolve_module(unquote(path)) do
+            unquote(module)
+          end
         end
       end
 
