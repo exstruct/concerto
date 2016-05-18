@@ -10,6 +10,11 @@ defmodule Concerto do
       |> Path.join("**/*#{ext}")
       |> Path.wildcard()
 
+      if length(resources) == 0 do
+        require Logger
+        Logger.warn "No routes found in #{inspect(root)}"
+      end
+
       methods = (opts[:methods] || ["GET", "POST", "PUT", "DELETE", "PATCH"])
       |> Enum.reduce(%{}, fn
         ({key, value}, acc) ->
