@@ -1,12 +1,20 @@
+defmodule Concerto.PathConflictError do
+  defexception [:a, :b]
+
+  def message(%{a: a, b: b}) do
+    "Path conflict with #{inspect(a)} and #{inspect(b)}"
+  end
+end
+
 defmodule Concerto.Utils do
   @moduledoc false
 
   def format_locations(files, root, ext, allowed_methods, filters) do
     files
-    |> Enum.filter(fn(file) ->
+    |> Stream.filter(fn(file) ->
       !Enum.any?(filters, &Regex.match?(&1, file))
     end)
-    |> Enum.map(fn(file) ->
+    |> Stream.map(fn(file) ->
       path = path_to_list(file, root)
 
       method = Path.basename(file, ext)
@@ -18,7 +26,26 @@ defmodule Concerto.Utils do
 
       {Path.absname(file, root), method, mapped_method, path}
     end)
+    |> Enum.sort(fn({a_file, _, _, a}, {b_file, _, _, b}) ->
+      try do
+        sort_path(a, b)
+      catch
+        :path_conflict ->
+          raise Concerto.PathConflictError, [
+            a: Path.relative_to(a_file, root),
+            b: Path.relative_to(b_file, root)
+          ]
+      end
+    end)
   end
+
+  defp sort_path([], _), do: true
+  defp sort_path(_, []), do: false
+  defp sort_path([a | a_r], [a | b_r]), do: sort_path(a_r, b_r)
+  defp sort_path(["@" <> _ | _], ["@" <> _ | _]), do: throw :path_conflict
+  defp sort_path(["@" <> _ | _], [_ | _]), do: false
+  defp sort_path([_ | _], ["@" <> _ | _]), do: true
+  defp sort_path([_ | a_r], [_ | b_r]), do: sort_path(a_r, b_r)
 
   defp path_to_list(path, root) do
     case Path.dirname(Path.relative_to(path, root)) do

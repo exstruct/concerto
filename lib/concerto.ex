@@ -1,7 +1,7 @@
 defmodule Concerto do
   defmacro __using__(opts) do
     quote bind_quoted: binding do
-      root = opts[:root] || "web"
+      root = Path.expand(opts[:root] || "web", __DIR__)
       ext = opts[:ext] || ".exs"
 
       resources = root
@@ -9,13 +9,13 @@ defmodule Concerto do
       |> Path.wildcard()
 
       methods = (opts[:methods] || ["GET", "POST", "PUT", "DELETE", "PATCH"])
-      |> Enum.map(fn
-        ({key, value}) when is_binary(key) ->
-          {key, value}
-        (key) when is_binary(key) ->
-          {key, key}
+      |> Enum.reduce(%{}, fn
+        ({key, value}, acc) ->
+          Map.put(acc, to_string(key), value)
+        (key, acc) ->
+          key = to_string(key)
+          Map.put(acc, key, key)
       end)
-      |> Enum.into(%{})
       default_method = opts[:default_method] || "GET"
 
       prefix = opts[:module_prefix] || __MODULE__
@@ -63,13 +63,17 @@ defmodule Concerto do
         path = "/" <> Enum.join(path_info, "/")
         name = method <> " " <> path
         module = Concerto.Utils.format_module(prefix, path_info, method)
+        relative = Path.relative_to(file, root)
         {parts, params} = Concerto.Utils.format_parts(path_info)
 
-        def match(unquote(method), unquote(parts)) do
+        def match(unquote(mapped_method), unquote(parts)) do
           {unquote(module), %{unquote_splicing(params)}}
         end
 
         def resolve(unquote(file), %{unquote_splicing(params)}) do
+          {unquote(mapped_method), unquote(parts)}
+        end
+        def resolve(unquote(relative), %{unquote_splicing(params)}) do
           {unquote(mapped_method), unquote(parts)}
         end
         def resolve(unquote(name), %{unquote_splicing(params)}) do
@@ -82,7 +86,13 @@ defmodule Concerto do
         def resolve_module(unquote(file)) do
           unquote(module)
         end
+        def resolve_module(unquote(relative)) do
+          unquote(module)
+        end
         def resolve_module(unquote(name)) do
+          unquote(module)
+        end
+        def resolve_module(unquote(module)) do
           unquote(module)
         end
 
@@ -98,7 +108,11 @@ defmodule Concerto do
       end
 
       def match(_, _), do: nil
-      def resolve(_, _), do: nil
+      def resolve(name, _) do
+        if resolve_module(name) do
+          :error
+        end
+      end
       def resolve_module(_), do: nil
 
       def reload do
