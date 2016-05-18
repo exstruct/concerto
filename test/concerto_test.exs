@@ -21,17 +21,19 @@ defmodule ConcertoTest do
 
   @tag paths: [
     "/GET.exs",
+    "/posts/@post/GET.exs",
     "/users/GET.exs",
     "/users/POST.exs",
     "/users/foo/GET.exs",
     "/users/@user/GET.exs",
     "/users/@user/POST.exs",
-    "/users/__test__/GET.exs"
+    "/users/__test__/GET.exs",
   ]
   test "defaults", context do
     module = create_router(context)
 
     module |> assert_route("GET", [], m(module, GET))
+    module |> assert_route("GET", ["posts", "@post"], m(module, Posts.Post_.GET), %{"post" => "789"})
     module |> assert_route("GET", ["users"], m(module, Users.GET))
     module |> assert_route("POST", ["users"], m(module, Users.POST))
     module |> assert_route("GET", ["users", "foo"], m(module, Users.Foo.GET))

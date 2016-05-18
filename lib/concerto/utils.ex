@@ -45,7 +45,7 @@ defmodule Concerto.Utils do
   defp sort_path(["@" <> _ | _], ["@" <> _ | _]), do: throw :path_conflict
   defp sort_path(["@" <> _ | _], [_ | _]), do: false
   defp sort_path([_ | _], ["@" <> _ | _]), do: true
-  defp sort_path([_ | a_r], [_ | b_r]), do: sort_path(a_r, b_r)
+  defp sort_path([a | _], [b | _]), do: a < b
 
   defp path_to_list(path, root) do
     case Path.dirname(Path.relative_to(path, root)) do
