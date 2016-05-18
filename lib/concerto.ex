@@ -1,6 +1,8 @@
 defmodule Concerto do
   defmacro __using__(opts) do
     quote bind_quoted: binding do
+      @before_compile Concerto
+
       root = Path.expand(opts[:root] || "web", __DIR__)
       ext = opts[:ext] || ".exs"
 
@@ -106,17 +108,23 @@ defmodule Concerto do
           end
         end
       end
+    end
+  end
 
-      def match(_, _), do: nil
+  defmacro __before_compile__(_) do
+    quote do
+      def match(_, _) do
+        nil
+      end
+
       def resolve(name, _) do
         if resolve_module(name) do
           :error
         end
       end
-      def resolve_module(_), do: nil
 
-      def reload do
-        Code.load_file(__ENV__.file)
+      def resolve_module(_) do
+        nil
       end
     end
   end

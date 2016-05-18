@@ -19,7 +19,7 @@ Given the following directory structure
 ```sh
 .
 ├── lib
-│   └── my_router.ex
+│   └── my_router.ex
 └── web
     ├── GET.exs
     └── users
@@ -46,5 +46,3 @@ end
 ### `resolve(name, params)`
 
 ### `resolve_module(name)`
-
-### `reload()`
