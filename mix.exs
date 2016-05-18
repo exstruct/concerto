@@ -4,7 +4,7 @@ defmodule Concerto.Mixfile do
   def project do
     [app: :concerto,
      description: "file-based routing library for elixir",
-     version: "0.1.0",
+     version: "0.1.1",
      elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -24,6 +24,6 @@ defmodule Concerto.Mixfile do
     [files: ["lib", "mix.exs", "README*"],
      maintainers: ["Cameron Bytheway"],
      licenses: ["MIT"],
-     links: %{"GitHub" => "https://github.com/camshaft/concerto"}]
+     links: %{"GitHub" => "https://github.com/exstruct/concerto"}]
   end
 end
