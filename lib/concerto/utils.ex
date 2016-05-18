@@ -1,11 +1,3 @@
-defmodule Concerto.PathConflictError do
-  defexception [:a, :b]
-
-  def message(%{a: a, b: b}) do
-    "Path conflict with #{inspect(a)} and #{inspect(b)}"
-  end
-end
-
 defmodule Concerto.Utils do
   @moduledoc false
 
@@ -31,7 +23,7 @@ defmodule Concerto.Utils do
         sort_path(a, b)
       catch
         :path_conflict ->
-          raise Concerto.PathConflictError, [
+          raise Concerto.PathConflictException, [
             a: Path.relative_to(a_file, root),
             b: Path.relative_to(b_file, root)
           ]

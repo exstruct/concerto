@@ -111,7 +111,7 @@ defmodule ConcertoTest do
     "/users/@other/GET.exs"
   ]
   test "path conflict", context do
-    assert_raise Concerto.PathConflictError, fn ->
+    assert_raise Concerto.PathConflictException, fn ->
       create_router(context)
     end
   end
