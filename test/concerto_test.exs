@@ -45,12 +45,13 @@ defmodule ConcertoTest do
     module.resolve("/users/foo") |> assert_eql({"GET", ["users", "foo"]})
     module.resolve("/users/@user", %{"user" => "345"}) |> assert_eql({"GET", ["users", "345"]})
 
-    module.resolve("GET.exs") |> assert_eql({"GET", []})
-    module.resolve("users/GET.exs") |> assert_eql({"GET", ["users"]})
-    module.resolve("users/POST.exs") |> assert_eql({"POST", ["users"]})
-    module.resolve("users/foo/GET.exs") |> assert_eql({"GET", ["users", "foo"]})
-    module.resolve("users/@user/GET.exs", %{"user" => "678"}) |> assert_eql({"GET", ["users", "678"]})
-    module.resolve("users/@user/POST.exs", %{"user" => "789"}) |> assert_eql({"POST", ["users", "789"]})
+    dir = "file://" <> context.dir
+    module.resolve("#{dir}/GET.exs") |> assert_eql({"GET", []})
+    module.resolve("#{dir}/users/GET.exs") |> assert_eql({"GET", ["users"]})
+    module.resolve("#{dir}/users/POST.exs") |> assert_eql({"POST", ["users"]})
+    module.resolve("#{dir}/users/foo/GET.exs") |> assert_eql({"GET", ["users", "foo"]})
+    module.resolve("#{dir}/users/@user/GET.exs", %{"user" => "678"}) |> assert_eql({"GET", ["users", "678"]})
+    module.resolve("#{dir}/users/@user/POST.exs", %{"user" => "789"}) |> assert_eql({"POST", ["users", "789"]})
 
     module.resolve("GET /users/@user") |> assert_eql(:error)
     module.resolve("POST /users/@user", %{"foo" => "123"}) |> assert_eql(:error)
@@ -116,11 +117,59 @@ defmodule ConcertoTest do
     end
   end
 
+  @tag paths: [
+    "/1/GET.exs",
+    "/1/foo/GET.exs",
+    "/1/foo/@param/GET.exs",
+    "/2/GET.exs",
+    "/2/foo/GET.exs",
+    "/2/foo/@param/GET.exs"
+  ]
+  test "forwarded", %{dir: dir, target: target} do
+    one = m(target, One)
+    one_d = dir <> "/1"
+    one_r = create_router(%{target: one, dir: one_d})
+
+    two = m(target, Two)
+    two_d = dir <> "/2"
+    two_opts = [forwards: [{"/bar", one}]]
+    two_r = create_router(%{target: two, dir: two_d}, two_opts)
+
+    one_r |> assert_route("GET", [], m(one, GET))
+    one_r |> assert_route("GET", ["foo"], m(one, Foo.GET))
+    one_r |> assert_route("GET", ["foo", "@param"], m(one, Foo.Param_.GET), %{"param" => "456"})
+
+    two_r |> assert_route("GET", [], m(two, GET))
+    two_r |> assert_route("GET", ["foo"], m(two, Foo.GET))
+    two_r |> assert_route("GET", ["foo", "@param"], m(two, Foo.Param_.GET), %{"param" => "789"})
+
+    two_r |> assert_route("GET", ["bar"], m(one, GET))
+    two_r |> assert_route("GET", ["bar", "foo"], m(one, Foo.GET))
+    two_r |> assert_route("GET", ["bar", "foo", "@param"], m(one, Foo.Param_.GET), %{"param" => "123"})
+
+    two_r.resolve("/bar") |> assert_eql({"GET", ["bar"]})
+    two_r.resolve("/bar/foo") |> assert_eql({"GET", ["bar", "foo"]})
+    two_r.resolve("/bar/foo/@param", %{"param" => "987"}) |> assert_eql({"GET", ["bar", "foo", "987"]})
+
+    two_r.resolve("file://#{one_d}/GET.exs") |> assert_eql({"GET", ["bar"]})
+    two_r.resolve("file://#{two_d}/GET.exs") |> assert_eql({"GET", []})
+    two_r.resolve("file://#{one_d}/foo/GET.exs") |> assert_eql({"GET", ["bar", "foo"]})
+    two_r.resolve("file://#{two_d}/foo/GET.exs") |> assert_eql({"GET", ["foo"]})
+
+    two_r.resolve("GET /foo/@param") |> assert_eql(:error)
+    two_r.resolve("GET /bar/bang") |> assert_eql(nil)
+    two_r.resolve("GET /bar/foo/@param") |> assert_eql(:error)
+  end
+
   defp create_router(context, opts \\ []) do
     target = context.target
 
     defmodule target do
       use Concerto, [{:root, context.dir} | opts]
+
+      for {path, to} <- opts[:forwards] || [] do
+        forward path, to: to
+      end
     end
 
     target
