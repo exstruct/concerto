@@ -1,4 +1,4 @@
-# concerto
+# concerto [![Build Status](https://travis-ci.org/exstruct/concerto.svg?branch=master)](https://travis-ci.org/exstruct/concerto)
 
 file-based routing library for elixir
 
