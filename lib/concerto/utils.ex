@@ -56,7 +56,7 @@ defmodule Concerto.Utils do
   defp camelize(name) do
     name
     |> String.replace("-", "_")
-    |> Mix.Utils.camelize()
+    |> Macro.camelize()
   end
 
   def format_parts(path) do
