@@ -50,13 +50,16 @@ defmodule Concerto.Utils do
     Module.concat([prefix | Enum.map(path, &camelize/1) ++ [method]])
   end
 
-  defp camelize("@" <> name) do
-    camelize(name) <> "_"
-  end
   defp camelize(name) do
     name
     |> String.replace("-", "_")
-    |> Macro.camelize()
+    |> camelize_ex()
+  end
+
+  if function_exported?(Macro, :camelize, 1) do
+    def camelize_ex(str), do: Macro.camelize(str)
+  else
+    def camelize_ex(str), do: Mix.Utils.camelize(str)
   end
 
   def format_parts(path) do
