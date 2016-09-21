@@ -1,6 +1,6 @@
 defmodule Concerto do
   defmacro __using__(opts) do
-    quote bind_quoted: binding do
+    quote bind_quoted: binding() do
       @before_compile Concerto
       import Concerto
       Module.register_attribute(__MODULE__, :concerto_forwards, accumulate: true)
@@ -115,7 +115,7 @@ defmodule Concerto do
 
   defmacro forward(path, opts) do
     to = opts[:to]
-    quote bind_quoted: binding do
+    quote bind_quoted: binding() do
       ["" | parts] = String.split(path, "/")
 
       @concerto_forwards {to, parts}
