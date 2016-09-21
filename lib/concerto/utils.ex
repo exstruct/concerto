@@ -59,7 +59,7 @@ defmodule Concerto.Utils do
   if function_exported?(Macro, :camelize, 1) do
     def camelize_ex(str), do: Macro.camelize(str)
   else
-    def camelize_ex(str), do: Mix.Utils.camelize(str)
+    def camelize_ex(str), do: apply(Mix.Utils, :camelize, [str])
   end
 
   def format_parts(path) do
