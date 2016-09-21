@@ -50,6 +50,9 @@ defmodule Concerto.Utils do
     Module.concat([prefix | Enum.map(path, &camelize/1) ++ [method]])
   end
 
+  defp camelize("@" <> name) do
+    camelize(name) <> "_"
+  end
   defp camelize(name) do
     name
     |> String.replace("-", "_")
