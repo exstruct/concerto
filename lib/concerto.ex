@@ -8,9 +8,24 @@ defmodule Concerto do
       root = Path.expand(opts[:root] || "web", __DIR__)
       ext = opts[:ext] || ".exs"
 
-      resources = root
-      |> Path.join("**/*#{ext}")
+      all_files = root
+      |> Path.join("**")
       |> Path.wildcard()
+
+      resources = all_files
+      |> Enum.filter(fn(file) ->
+        Path.extname(file) == ext
+      end)
+
+      [root | all_files]
+      |> Enum.each(fn(file) ->
+        case File.stat(file) do
+          {:ok, %{type: :directory, mtime: m}} ->
+            @external_resource file
+          _ ->
+            :ok
+        end
+      end)
 
       if length(resources) == 0 do
         require Logger
