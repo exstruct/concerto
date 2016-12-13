@@ -20,7 +20,7 @@ defmodule Concerto do
       [root | all_files]
       |> Enum.each(fn(file) ->
         case File.stat(file) do
-          {:ok, %{type: :directory, mtime: m}} ->
+          {:ok, %{type: :directory, mtime: _m}} ->
             @external_resource file
           _ ->
             :ok
