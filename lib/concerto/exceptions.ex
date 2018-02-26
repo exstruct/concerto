@@ -1,15 +1,13 @@
-defmodule Concerto.InvalidMethodException do
-  defexception [:method, :allowed]
+defmodule Concerto.MatchError do
+  defexception []
 
-  def message(%{method: method, allowed: allowed}) do
-    "Invalid method #{inspect(method)}. Allowed methods include #{inspect(allowed)}"
+  def message(_) do
+    "No match found"
   end
-end
 
-defmodule Concerto.PathConflictException do
-  defexception [:a, :b]
-
-  def message(%{a: a, b: b}) do
-    "Path conflict with #{inspect(a)} and #{inspect(b)}"
+  defimpl Plug.Exception do
+    def status(_) do
+      404
+    end
   end
 end
